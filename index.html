@@ -1,0 +1,105 @@
+<!DOCTYPE html><html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Horloge PWA – Annonce vocale</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <meta name="theme-color" content="#111827" />
+</head>
+<body id="app" class="min-h-screen flex items-center justify-center transition-all duration-700">  <div class="w-full max-w-md text-center p-8 rounded-3xl shadow-2xl bg-white/10 backdrop-blur text-white">
+    <h1 id="day" class="text-xl font-semibold mb-1"></h1>
+    <div id="time" class="text-6xl font-bold tracking-widest"></div>
+    <div id="date" class="mt-2 text-sm"></div><div class="mt-4">
+  <label class="flex items-center gap-2 justify-center">
+    <input type="checkbox" id="voiceToggle" checked />
+    <span>🗣️ Annonce vocale de l'heure</span>
+  </label>
+</div>
+
+<p id="voiceStatus" class="mt-2 text-xs text-green-300"></p>
+
+<div class="mt-6 flex justify-between">
+  <button id="themeBtn" class="px-4 py-2 bg-indigo-600 rounded-lg">🌙 / ☀️</button>
+  <button id="fullscreenBtn" class="px-4 py-2 bg-slate-700 rounded-lg">🖥️ Murale</button>
+</div>
+
+  </div><script>
+/***********************
+ * STYLE PAR JOUR
+ ***********************/
+const app = document.getElementById('app');
+const dayStyles = {
+  0: 'bg-gradient-to-br from-purple-900 to-indigo-900',
+  1: 'bg-gradient-to-br from-blue-900 to-sky-800',
+  2: 'bg-gradient-to-br from-emerald-900 to-green-700',
+  3: 'bg-gradient-to-br from-yellow-800 to-orange-700',
+  4: 'bg-gradient-to-br from-pink-900 to-rose-700',
+  5: 'bg-gradient-to-br from-red-900 to-rose-800',
+  6: 'bg-gradient-to-br from-gray-900 to-slate-800'
+};
+
+/***********************
+ * HORLOGE
+ ***********************/
+const timeEl = document.getElementById('time');
+const dateEl = document.getElementById('date');
+const dayEl = document.getElementById('day');
+
+let lastSpokenHour = null;
+const voiceToggle = document.getElementById('voiceToggle');
+const voiceStatus = document.getElementById('voiceStatus');
+
+function speak(text) {
+  if (!voiceToggle.checked) return;
+  if (!('speechSynthesis' in window)) return;
+
+  const utter = new SpeechSynthesisUtterance(text);
+  utter.lang = 'fr-FR';
+  utter.rate = 0.9;
+  speechSynthesis.cancel();
+  speechSynthesis.speak(utter);
+}
+
+function updateClock() {
+  const now = new Date();
+  const h = now.getHours();
+  const m = now.getMinutes();
+  const s = now.getSeconds();
+
+  timeEl.textContent = now.toLocaleTimeString('fr-FR');
+  dayEl.textContent = now.toLocaleDateString('fr-FR', { weekday: 'long' }).toUpperCase();
+  dateEl.textContent = now.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+
+  app.className = `min-h-screen flex items-center justify-center transition-all duration-700 ${dayStyles[now.getDay()]}`;
+
+  // 🔊 Annonce vocale chaque heure pile
+  if (m === 0 && s === 0 && lastSpokenHour !== h) {
+    speak(`Il est ${h} heure${h > 1 ? 's' : ''}`);
+    voiceStatus.textContent = `🗣️ Heure annoncée : ${h}h00`;
+    lastSpokenHour = h;
+  }
+}
+
+setInterval(updateClock, 1000);
+updateClock();
+
+/***********************
+ * THEME
+ ***********************/
+let bright = false;
+const themeBtn = document.getElementById('themeBtn');
+themeBtn.onclick = () => {
+  bright = !bright;
+  document.body.classList.toggle('brightness-125', bright);
+};
+
+/***********************
+ * FULLSCREEN
+ ***********************/
+const fsBtn = document.getElementById('fullscreenBtn');
+fsBtn.onclick = () => {
+  if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+  else document.exitFullscreen();
+};
+</script></body>
+</html>
